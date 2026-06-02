@@ -18,8 +18,8 @@
     --green: #4ecb71;
     --red: #f56060;
     --card-front: linear-gradient(135deg, #3a2f7a, #5a48b0);
-    --card-back-prize: linear-gradient(135deg, #1a3a2a, #2a5a3a); 
-    --card-back-bomb: linear-gradient(135deg, #3a1a1a, #5a2a2a);  
+    --card-back-prize: linear-gradient(135deg, #1a3a2a, #2a5a3a); /* 당첨: 초록 */
+    --card-back-bomb: linear-gradient(135deg, #3a1a1a, #5a2a2a);  /* 꽝/마이너스: 빨강 */
     --card-back-empty: #1e1e30;
     --flip-duration: 0.5s;
   }
@@ -30,6 +30,8 @@
     color: var(--text);
     min-height: 100vh;
   }
+
+  /* 헤더 */
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -49,6 +51,7 @@
   .hstat { font-size: 13px; color: var(--text2); }
   .hstat b { color: var(--text); font-weight: 600; }
 
+  /* 탭 네비게이션 */
   .tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
@@ -70,10 +73,12 @@
   .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
   .tab-btn:hover { color: var(--text); }
 
+  /* 메인 컨텐츠 */
   .content { padding: 20px 24px; }
   .panel { display: none; }
   .panel.active { display: block; }
 
+  /* 상품 설정 */
   .prize-setup { max-width: 640px; margin: 0 auto; }
   .prize-setup h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
   .prize-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
@@ -94,6 +99,7 @@
     color: var(--text);
     width: 100%;
   }
+  .prize-row input:focus { outline: none; border-color: var(--accent); }
   .del-btn {
     background: none;
     border: 1px solid var(--border);
@@ -105,6 +111,7 @@
     height: 36px;
     display: flex; align-items: center; justify-content: center;
   }
+  .del-btn:hover { background: rgba(245,96,96,0.1); }
   .add-btn, .apply-btn {
     font-family: inherit;
     font-size: 14px;
@@ -131,6 +138,7 @@
     line-height: 1.6;
   }
 
+  /* 뽑기판 툴바 및 그리드 */
   .board-toolbar {
     display: flex;
     gap: 10px;
@@ -190,10 +198,11 @@
   }
   .front:hover { filter: brightness(1.2); }
   .back { transform: rotateY(180deg); border: 1px solid rgba(255,255,255,0.1); }
-  
+   
+  /* 칸이 뒤집혔을 때 내부 배치 컨테이너 스타일 */
   .back.prize { background: var(--card-back-prize); }
   .back.bomb { background: var(--card-back-bomb); }
-  
+   
   .cell-content-box {
     display: flex;
     flex-direction: column;
@@ -204,9 +213,12 @@
     padding: 2px;
     gap: 1px;
   }
-  .cell-emo { font-size: 13px; line-height: 1; }
+  .cell-emo {
+    font-size: 13px; /* 칸 안의 이모지 크기 */
+    line-height: 1;
+  }
   .cell-txt {
-    font-size: 7.5px; 
+    font-size: 7.5px; /* 작은 뽑기 칸에 맞게 글자 크기 최적화 */
     color: #ffffff;
     font-weight: 500;
     white-space: nowrap;
@@ -214,9 +226,9 @@
     text-overflow: ellipsis;
     max-width: 95%;
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    letter-spacing: 0.2px;
   }
 
+  /* 상품 현황 */
   .prize-status-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -231,6 +243,7 @@
   .pcard-nums b { color: var(--green); }
   .pcard-nums b.zero { color: var(--red); }
 
+  /* 결과 팝업 */
   .result-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.8);
     display: none; align-items: center; justify-content: center; z-index: 200;
@@ -251,6 +264,7 @@
     font-family: inherit; font-size: 15px; padding: 10px 30px;
     border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer;
   }
+
   @media (max-width: 768px) { .grid { grid-template-columns: repeat(10, 1fr); } }
 </style>
 </head>
@@ -290,6 +304,10 @@
         <button class="add-btn" onclick="addPrizeRow()">+ 상품 추가</button>
       </div>
       <div class="total-count" id="totalCount">총 수량: <b>0</b> / 300</div>
+      <div class="notice">
+        • <b>빨간색 칸 자동 배정 기준:</b> 이름에 [<b>꽝</b>] 또는 마이너스 기호[<b>-</b>]가 들어가면 뽑았을 때 빨간색 배경에 번개(⚡) 이모지가 나옵니다.<br>
+        • 수량의 총합이 정확히 <b>300</b>이 되어야 정상 적용됩니다.
+      </div>
       <div class="btn-row" style="margin-top:16px">
         <button class="apply-btn" onclick="applyPrizes()">✅ 저장 후 판 새로 짜기</button>
       </div>
@@ -304,7 +322,7 @@
 <div class="result-overlay" id="resultOverlay" onclick="closeResult()">
   <div class="result-box" onclick="event.stopPropagation()">
     <div class="result-emoji" id="resultEmoji">🎉</div>
-    <div class="result-num" id="resultNum">#0번 칸 개봉 완료</div>
+    <div class="result-num" id="resultNum">#0번 칸 개봉</div>
     <div class="result-prize" id="resultPrize">대박 상품</div>
     <div class="result-remain" id="resultRemain">남은 수량: 0개</div>
     <button class="result-close" onclick="closeResult()">확인</button>
@@ -314,17 +332,17 @@
 <script>
 const DEFAULT_PRIZES = [
   { name: '1등', qty: 3 },
-  { name: '컨셉사진', qty: 5 },
+  { name: '컨셉 사진', qty: 5 },
   { name: '택배', qty: 10 },
   { name: '코스튬 사진', qty: 40 },
   { name: '1:1통화', qty: 5 },
   { name: '랜덤 사진', qty: 22 },
   { name: '질문권', qty: 30 },
-  { name: '150POINT', qty: 20 },
+  { name: '150 당근', qty: 20 },
   { name: '꽝', qty: 40 },
-  { name: '-300POINT', qty: 5 },
-  { name: '-200POINT', qty: 5 },
-  { name: '-100POINT', qty: 30 },
+  { name: '-300 당근', qty: 5 },
+  { name: '-200 당근', qty: 5 },
+  { name: '-100 당근', qty: 30 },
   { name: '한 번 더!', qty: 20 },
   { name: '두 번 더!', qty: 5 },
   { name: '채널 입장권', qty: 10 },
@@ -334,17 +352,17 @@ const DEFAULT_PRIZES = [
 
 const EMOJI_MAP = {
   '1등': '🏆',
-  '컨셉사진': '📸',
+  '컨셉 사진': '📸',
   '택배': '📦',
   '코스튬 사진': '🎰',
   '1:1통화': '🗣️',
   '랜덤 사진': '🎰',
   '질문권': '🎟️',
-  '150POINT': '⚡',
+  '150 당근': '⚡',
   '꽝': '⚡',
-  '-300POINT': '⚡',
-  '-200POINT': '⚡',
-  '-100POINT': '⚡',
+  '-300 당근': '⚡',
+  '-200 당근': '⚡',
+  '-100 당근': '⚡',
   '한 번 더!': '🔄',
   '두 번 더!': '🔄',
   '채널 입장권': '📲',
@@ -352,68 +370,94 @@ const EMOJI_MAP = {
   '랜덤 포인트': '🎰'
 };
 
-function convertToSpecialFont(str) {
-  if (!str) return '';
-  const normalSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const specialSet = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀ<b>ꜱ</b>ᴛᴜᴠ<b>ᴡ</b>xʏᴢ";
-  return str.split('').map(char => {
-    const idx = normalSet.indexOf(char.toUpperCase());
-    return idx !== -1 ? specialSet[idx] : char;
-  }).join('');
-}
-
 const TOTAL = 300;
 let prizes = [];
 let board = [];
 let prizeRemain = [];
-const STORAGE_KEY = 'lottery_firebase_v1';
 
-function loadStorage() {
+// 파이어베이스 실시간 데이터베이스 연동 경로 고정
+const FIREBASE_URL = "https://lottrey-d0381-default-rtdb.firebaseio.com/boardData.json";
+
+async function saveStorage() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) {
-      const data = JSON.parse(raw);
-      if(data && Array.isArray(data.board) && data.board.length === TOTAL && Array.isArray(data.prizes)) {
-        prizes = data.prizes;
-        board = data.board;
-        prizeRemain = data.prizeRemain || data.prizes.map(p => p.qty);
-        return true;
-      }
+    await fetch(FIREBASE_URL, {
+      method: 'PUT',
+      body: JSON.stringify({ prizes, board, prizeRemain })
+    });
+  } catch(e) { console.error("데이터 저장 오류:", e); }
+}
+
+async function loadStorage() {
+  try {
+    const res = await fetch(FIREBASE_URL);
+    const data = await res.json();
+    if(data && Array.isArray(data.board) && data.board.length === TOTAL && Array.isArray(data.prizes)) {
+      prizes = data.prizes;
+      board = data.board;
+      prizeRemain = data.prizeRemain || data.prizes.map(p => p.qty);
+      return true;
     }
-  } catch(e) { console.error(e); }
+  } catch(e) { 
+    console.error("데이터 로딩 오류", e); 
+  }
   return false;
 }
 
-function saveStorage() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ prizes, board, prizeRemain })); } catch(e) { console.error(e); }
+// 1.2초마다 파이어베이스 데이터베이스 실시간 체크 및 동기화
+function startRealtimeSync() {
+  setInterval(async () => {
+    try {
+      const res = await fetch(FIREBASE_URL);
+      const data = await res.json();
+      if (data && data.board) {
+        // 내부 데이터와 변경점이 있을 때만 렌더링 호출
+        if (JSON.stringify(board) !== JSON.stringify(data.board)) {
+          board = data.board;
+          prizes = data.prizes;
+          prizeRemain = data.prizeRemain;
+          renderGrid();
+          renderStatusGrid();
+          updateHeader();
+        }
+      }
+    } catch(e) {}
+  }, 1200);
 }
 
-function init() {
-  if (!loadStorage()) {
+async function init() {
+  const loaded = await loadStorage();
+  if (!loaded) {
     prizes = JSON.parse(JSON.stringify(DEFAULT_PRIZES));
-    buildNewBoard();
+    await buildNewBoard();
   }
   renderPrizeList();
   renderGrid();
   renderStatusGrid();
   updateHeader();
+  startRealtimeSync();
 }
 
-function buildNewBoard() {
+async function buildNewBoard() {
   prizeRemain = prizes.map(p => p.qty);
   let tempPool = [];
   prizes.forEach((p, idx) => {
     let q = parseInt(p.qty) || 0;
-    for(let i=0; i<q; i++) tempPool.push(idx);
+    for(let i=0; i<q; i++) {
+      tempPool.push(idx);
+    }
   });
+  
   while(tempPool.length < TOTAL) tempPool.push(-1);
   tempPool = tempPool.slice(0, TOTAL);
+
+  // 무작위 셔플 알고리즘
   for (let i = tempPool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
   }
+
   board = tempPool.map(pIdx => ({ prizeIdx: pIdx, flipped: false }));
-  saveStorage();
+  await saveStorage();
 }
 
 function setIsBomb(name) {
@@ -426,16 +470,18 @@ function renderGrid() {
   const container = document.getElementById('grid');
   if(!container) return;
   container.innerHTML = '';
+
   board.forEach((cell, i) => {
     const div = document.createElement('div');
     div.className = 'cell' + (cell.flipped ? ' flipped done' : '');
     div.id = 'cell-' + i;
+
     const pIdx = cell.prizeIdx;
     const name = (pIdx >= 0 && prizes[pIdx]) ? prizes[pIdx].name : '꽝';
     const isBomb = setIsBomb(name);
     const emoji = EMOJI_MAP[name] || '🎁';
+
     const backBgClass = isBomb ? 'bomb' : 'prize';
-    const displayFormattedName = convertToSpecialFont(name);
 
     div.innerHTML = `
       <div class="cell-inner">
@@ -444,25 +490,32 @@ function renderGrid() {
           ${cell.flipped ? `
             <div class="cell-content-box">
               <span class="cell-emo">${emoji}</span>
-              <span class="cell-txt">${displayFormattedName}</span>
+              <span class="cell-txt">${name}</span>
             </div>
           ` : ''}
         </div>
       </div>
     `;
-    if(!cell.flipped) div.addEventListener('click', () => flipCell(i));
+
+    if(!cell.flipped) {
+      div.addEventListener('click', () => flipCell(i));
+    }
     container.appendChild(div);
   });
 }
 
-function flipCell(i) {
+async function flipCell(i) {
   if(!board[i] || board[i].flipped) return;
   board[i].flipped = true;
+
   const pIdx = board[i].prizeIdx;
   const name = (pIdx >= 0 && prizes[pIdx]) ? prizes[pIdx].name : '꽝';
   const isBomb = setIsBomb(name);
   const emoji = EMOJI_MAP[name] || '🎁';
-  if(pIdx >= 0 && prizeRemain[pIdx] !== undefined) prizeRemain[pIdx] = Math.max(0, prizeRemain[pIdx] - 1);
+
+  if(pIdx >= 0 && prizeRemain[pIdx] !== undefined) {
+    prizeRemain[pIdx] = Math.max(0, prizeRemain[pIdx] - 1);
+  }
 
   const cellEl = document.getElementById('cell-' + i);
   if(cellEl) {
@@ -470,40 +523,49 @@ function flipCell(i) {
     const backFace = cellEl.querySelector('.back');
     if(backFace) {
       backFace.className = 'face back ' + (isBomb ? 'bomb' : 'prize');
-      const displayFormattedName = convertToSpecialFont(name);
       backFace.innerHTML = `
         <div class="cell-content-box">
           <span class="cell-emo">${emoji}</span>
-          <span class="cell-txt">${displayFormattedName}</span>
+          <span class="cell-txt">${name}</span>
         </div>
       `;
     }
   }
+
   updateHeader();
   renderStatusGrid();
-  saveStorage();
-  setTimeout(() => { showPopup(i + 1, name, emoji, isBomb, pIdx); }, 450);
+  await saveStorage();
+
+  setTimeout(() => {
+    showPopup(i + 1, name, emoji, isBomb, pIdx);
+  }, 450);
 }
 
 function showPopup(displayNum, name, emoji, isBomb, pIdx) {
   const overlay = document.getElementById('resultOverlay');
   if(!overlay) return;
-  const displayFormattedName = convertToSpecialFont(name);
+
   document.getElementById('resultNum').textContent = `#${displayNum}번 칸 개봉 완료`;
-  document.getElementById('resultPrize').textContent = `${emoji} ${displayFormattedName}`;
+  document.getElementById('resultPrize').textContent = `${emoji} ${name}`;
   document.getElementById('resultPrize').className = 'result-prize' + (isBomb ? ' bomb' : '');
-  document.getElementById('resultEmoji').textContent = isBomb ? '⚡' : '🎉';
+  document.getElementById('resultEmoji').textContent = isBomb ? '💣' : '🎉';
+  
   const remCount = (pIdx >= 0 && prizeRemain[pIdx] !== undefined) ? prizeRemain[pIdx] : 0;
-  document.getElementById('resultRemain').textContent = `[${displayFormattedName}] 남은 전체 수량: ${remCount}개`;
+  document.getElementById('resultRemain').textContent = `[${name}] 남은 전체 수량: ${remCount}개`;
+  
   overlay.classList.add('show');
 }
 
-function closeResult() { document.getElementById('resultOverlay').classList.remove('show'); }
+function closeResult() {
+  const overlay = document.getElementById('resultOverlay');
+  if(overlay) overlay.classList.remove('show');
+}
 
 function updateHeader() {
   const picked = board.filter(c => c.flipped).length;
   document.getElementById('hs-remain').textContent = TOTAL - picked;
   document.getElementById('hs-picked').textContent = picked;
+
   const activePrizes = prizeRemain.reduce((acc, current, idx) => {
     if(!prizes[idx]) return acc;
     return !setIsBomb(prizes[idx].name) ? acc + current : acc;
@@ -528,51 +590,86 @@ function renderPrizeList() {
   updateTotalCount();
 }
 
-function addPrizeRow() { prizes.push({ name: '새 상품', qty: 0 }); renderPrizeList(); }
-function removePrizeRow(i) { prizes.splice(i, 1); renderPrizeList(); }
+function addPrizeRow() {
+  prizes.push({ name: '새 상품', qty: 0 });
+  renderPrizeList();
+}
+
+function removePrizeRow(i) {
+  prizes.splice(i, 1);
+  renderPrizeList();
+}
+
 function updateTotalCount() {
   const total = prizes.reduce((sum, p) => sum + (parseInt(p.qty) || 0), 0);
   const container = document.getElementById('totalCount');
   if(!container) return;
   container.innerHTML = `총 수량: <b>${total}</b> / 300`;
-  container.className = total > 300 ? 'total-count over' : 'total-count';
+  if(total > 300) container.className = 'total-count over';
+  else container.className = 'total-count';
 }
 
-function applyPrizes() {
+async function applyPrizes() {
   const total = prizes.reduce((sum, p) => sum + (parseInt(p.qty) || 0), 0);
-  if(total !== TOTAL) { alert(`총 상품 수가 300개가 되도록 설정해주세요.\n(현재 입력 수량: ${total}개)`); return; }
-  buildNewBoard(); renderGrid(); renderStatusGrid(); updateHeader(); switchTab('board');
+  if(total !== TOTAL) {
+    alert(`총 상품 수가 300개가 되도록 설정해주세요.\n(현재 입력 수량: ${total}개)`);
+    return;
+  }
+  await buildNewBoard();
+  renderGrid();
+  renderStatusGrid();
+  updateHeader();
+  switchTab('board');
 }
 
-function doShuffle() {
+async function doShuffle() {
   if(!confirm('아직 안 열어본 칸들을 다시 셔플 배치하시겠습니까?')) return;
   const closedCells = board.map((c, idx) => ({...c, originalIdx: idx})).filter(c => !c.flipped);
   const prizeIndexes = closedCells.map(c => c.prizeIdx);
+  
   for (let i = prizeIndexes.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [prizeIndexes[i], prizeIndexes[j]] = [prizeIndexes[j], prizeIndexes[i]];
   }
-  closedCells.forEach((cell, i) => { board[cell.originalIdx].prizeIdx = prizeIndexes[i]; });
-  renderGrid(); saveStorage();
+
+  closedCells.forEach((cell, i) => {
+    board[cell.originalIdx].prizeIdx = prizeIndexes[i];
+  });
+
+  renderGrid();
+  await saveStorage();
 }
 
-function resetBoard() {
+async function resetBoard() {
   if(!confirm('모든 데이터를 리셋하고 뽑기판을 완벽히 초기화할까요?')) return;
-  localStorage.removeItem(STORAGE_KEY);
   prizes = JSON.parse(JSON.stringify(DEFAULT_PRIZES));
-  buildNewBoard(); renderPrizeList(); renderGrid(); renderStatusGrid(); updateHeader();
+  await buildNewBoard();
+  renderPrizeList();
+  renderGrid();
+  renderStatusGrid();
+  updateHeader();
 }
 
 function openByNum() {
   const input = document.getElementById('jumpInput');
   if(!input) return;
   const val = parseInt(input.value);
-  if(!val || val < 1 || val > TOTAL) { alert('1부터 300번 사이의 값을 입력하십시오.'); return; }
+  if(!val || val < 1 || val > TOTAL) {
+    alert('1부터 300번 사이의 값을 입력하십시오.');
+    return;
+  }
   const idx = val - 1;
   const target = document.getElementById('cell-' + idx);
   if(!target) return;
+
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  if(board[idx].flipped) { alert(`${val}번은 이미 선택된 칸입니다.`); input.value = ''; return; }
+
+  if(board[idx].flipped) {
+    alert(`${val}번은 이미 선택된 칸입니다.`);
+    input.value = '';
+    return;
+  }
+
   setTimeout(() => { flipCell(idx); }, 250);
   input.value = '';
 }
@@ -585,14 +682,19 @@ function renderStatusGrid() {
     const max = p.qty;
     const current = prizeRemain[i] !== undefined ? prizeRemain[i] : max;
     const rate = max > 0 ? (current / max) * 100 : 0;
+    
     const emoji = EMOJI_MAP[p.name] || '🎁';
-    const displayFormattedName = convertToSpecialFont(p.name);
     const card = document.createElement('div');
     card.className = 'pcard';
     card.innerHTML = `
-      <div class="pcard-name">${emoji} ${displayFormattedName}</div>
-      <div class="pcard-bar-wrap"><div class="pcard-bar ${current === 0 ? 'empty-bar' : ''}" style="width: ${rate}%"></div></div>
-      <div class="pcard-nums"><span>남은 수량</span><b class="${current === 0 ? 'zero' : ''}">${current} / ${max}개</b></div>
+      <div class="pcard-name">${emoji} ${p.name}</div>
+      <div class="pcard-bar-wrap">
+        <div class="pcard-bar ${current === 0 ? 'empty-bar' : ''}" style="width: ${rate}%"></div>
+      </div>
+      <div class="pcard-nums">
+        <span>남은 수량</span>
+        <b class="${current === 0 ? 'zero' : ''}">${current} / ${max}개</b>
+      </div>
     `;
     grid.appendChild(card);
   });
@@ -601,11 +703,14 @@ function renderStatusGrid() {
 function switchTab(tabName) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  
   const el = document.getElementById('panel-' + tabName);
   if(el) el.classList.add('active');
+  
   const map = { board: 0, setup: 1, status: 2 };
   const btns = document.querySelectorAll('.tab-btn');
   if(btns[map[tabName]]) btns[map[tabName]].classList.add('active');
+  
   if(tabName === 'status') renderStatusGrid();
 }
 

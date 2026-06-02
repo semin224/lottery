@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>300칸 뽑기판</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface2: #252540;
+    --border: rgba(255,255,255,0.08);
+    --accent: #7c6af5;
+    --accent2: #f5a623;
+    --text: #f0f0f0;
+    --text2: #9999bb;
+    --green: #4ecb71;
+    --red: #f56060;
+    --card-front: linear-gradient(135deg, #3a2f7a, #5a48b0);
+    --card-back-prize: linear-gradient(135deg, #1a3a2a, #2a5a3a); 
+    --card-back-bomb: linear-gradient(135deg, #3a1a1a, #5a2a2a);  
+    --card-back-empty: #1e1e30;
+    --flip-duration: 0.5s;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+  .hstat { font-size: 13px; color: var(--text2); }
+  .hstat b { color: var(--text); font-weight: 600; }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0 24px;
+  }
+  .tab-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-family: inherit;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover { color: var(--text); }
+
+  .content { padding: 20px 24px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .prize-setup { max-width: 640px; margin: 0 auto; }
+  .prize-setup h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .prize-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .prize-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 36px;
+    gap: 8px;
+    align-items: center;
+  }
+  .prize-row input[type="text"],
+  .prize-row input[type="number"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    width: 100%;
+  }
+  .del-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--red);
+    font-size: 18px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .add-btn, .apply-btn {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    font-weight: 500;
+  }
+  .add-btn { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .apply-btn { background: var(--accent); color: #fff; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .total-count { font-size: 13px; color: var(--text2); margin-top: 10px; }
+  .total-count b { color: var(--accent2); font-weight: 700; }
+  .total-count.over b { color: var(--red); }
+  .notice {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(124,106,245,0.05);
+    border: 1px solid rgba(124,106,245,0.15);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .board-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .board-toolbar input[type="number"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    width: 130px;
+  }
+  .toolbar-btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .toolbar-btn:hover { background: var(--accent); color: #fff; }
+  .toolbar-btn.danger:hover { background: var(--red); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    gap: 4px;
+  }
+  .cell { aspect-ratio: 1; perspective: 500px; cursor: pointer; }
+  .cell.done { cursor: default; }
+  .cell-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform var(--flip-duration) ease;
+    border-radius: 6px;
+  }
+  .cell.flipped .cell-inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; border-radius: 6px;
+    backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; overflow: hidden;
+  }
+  .front {
+    background: var(--card-front);
+    color: rgba(255,255,255,0.8);
+    font-size: 11px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .front:hover { filter: brightness(1.2); }
+  .back { transform: rotateY(180deg); border: 1px solid rgba(255,255,255,0.1); }
+  
+  .back.prize { background: var(--card-back-prize); }
+  .back.bomb { background: var(--card-back-bomb); }
+  
+  .cell-content-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 2px;
+    gap: 1px;
+  }
+  .cell-emo { font-size: 13px; line-height: 1; }
+  .cell-txt {
+    font-size: 7.5px; 
+    color: #ffffff;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 95%;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    letter-spacing: 0.2px;
+  }
+
+  .prize-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .pcard { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .pcard-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .pcard-bar-wrap { background: rgba(255,255,255,0.07); border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: 6px; }
+  .pcard-bar { height: 100%; background: var(--accent); }
+  .pcard-bar.empty-bar { background: var(--text2); width: 0% !important; }
+  .pcard-nums { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+  .pcard-nums b { color: var(--green); }
+  .pcard-nums b.zero { color: var(--red); }
+
+  .result-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+  }
+  .result-overlay.show { display: flex; }
+  .result-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 30px; text-align: center; max-width: 340px; width: 90%;
+    animation: popIn 0.25s ease-out;
+  }
+  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .result-emoji { font-size: 60px; margin-bottom: 10px; }
+  .result-num { font-size: 14px; color: var(--text2); margin-bottom: 4px; }
+  .result-prize { font-size: 26px; font-weight: 700; margin-bottom: 16px; color: var(--accent2); }
+  .result-prize.bomb { color: var(--red); }
+  .result-remain { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+  .result-close {
+    font-family: inherit; font-size: 15px; padding: 10px 30px;
+    border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer;
+  }
+  @media (max-width: 768px) { .grid { grid-template-columns: repeat(10, 1fr); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎁 <span>300</span>칸 뽑기판</h1>
+  <div class="header-stats">
+    <div class="hstat">남은칸 <b id="hs-remain">300</b></div>
+    <div class="hstat">뽑힌칸 <b id="hs-picked">0</b></div>
+    <div class="hstat">상품남음 <b id="hs-prizes">0</b></div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('board')">🎰 뽑기판</button>
+  <button class="tab-btn" onclick="switchTab('setup')">⚙️ 상품 설정</button>
+  <button class="tab-btn" onclick="switchTab('status')">📦 상품 현황</button>
+</div>
+
+<div class="content">
+  <div id="panel-board" class="panel active">
+    <div class="board-toolbar">
+      <input type="number" id="jumpInput" placeholder="번호 입력 (1~300)" min="1" max="300" onkeydown="if(event.key==='Enter') openByNum()"/>
+      <button class="toolbar-btn" onclick="openByNum()">번호 뽑기</button>
+      <button class="toolbar-btn" onclick="doShuffle()">🔀 미개봉 칸만 섞기</button>
+      <button class="toolbar-btn danger" onclick="resetBoard()">↩ 전체 초기화</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="panel-setup" class="panel">
+    <div class="prize-setup">
+      <h2>상품 구성 (총 300칸)</h2>
+      <div class="prize-list" id="prizeList"></div>
+      <div class="btn-row">
+        <button class="add-btn" onclick="addPrizeRow()">+ 상품 추가</button>
+      </div>
+      <div class="total-count" id="totalCount">총 수량: <b>0</b> / 300</div>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="apply-btn" onclick="applyPrizes()">✅ 저장 후 판 새로 짜기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-status" class="panel">
+    <div class="prize-status-grid" id="prizeStatusGrid"></div>
+  </div>
+</div>
+
+<div class="result-overlay" id="resultOverlay" onclick="closeResult()">
+  <div class="result-box" onclick="event.stopPropagation()">
+    <div class="result-emoji" id="resultEmoji">🎉</div>
+    <div class="result-num" id="resultNum">#0번 칸 개봉 완료</div>
+    <div class="result-prize" id="resultPrize">대박 상품</div>
+    <div class="result-remain" id="resultRemain">남은 수량: 0개</div>
+    <button class="result-close" onclick="closeResult()">확인</button>
+  </div>
+</div>
+
+<script>
+const DEFAULT_PRIZES = [
+  { name: '1등', qty: 3 },
+  { name: '컨셉사진', qty: 5 },
+  { name: '택배', qty: 10 },
+  { name: '코스튬 사진', qty: 40 },
+  { name: '1:1통화', qty: 5 },
+  { name: '랜덤 사진', qty: 22 },
+  { name: '질문권', qty: 30 },
+  { name: '150POINT', qty: 20 },
+  { name: '꽝', qty: 40 },
+  { name: '-300POINT', qty: 5 },
+  { name: '-200POINT', qty: 5 },
+  { name: '-100POINT', qty: 30 },
+  { name: '한 번 더!', qty: 20 },
+  { name: '두 번 더!', qty: 5 },
+  { name: '채널 입장권', qty: 10 },
+  { name: '공통 사진', qty: 40 },
+  { name: '랜덤 포인트', qty: 10 }
+];
+
+const EMOJI_MAP = {
+  '1등': '🏆',
+  '컨셉사진': '📸',
+  '택배': '📦',
+  '코스튬 사진': '🎰',
+  '1:1통화': '🗣️',
+  '랜덤 사진': '🎰',
+  '질문권': '🎟️',
+  '150POINT': '⚡',
+  '꽝': '⚡',
+  '-300POINT': '⚡',
+  '-200POINT': '⚡',
+  '-100POINT': '⚡',
+  '한 번 더!': '🔄',
+  '두 번 더!': '🔄',
+  '채널 입장권': '📲',
+  '공통 사진': '👀',
+  '랜덤 포인트': '🎰'
+};
+
+function convertToSpecialFont(str) {
+  if (!str) return '';
+  const normalSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const specialSet = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀ<b>ꜱ</b>ᴛᴜᴠ<b>ᴡ</b>xʏᴢ";
+  return str.split('').map(char => {
+    const idx = normalSet.indexOf(char.toUpperCase());
+    return idx !== -1 ? specialSet[idx] : char;
+  }).join('');
+}
+
+const TOTAL = 300;
+let prizes = [];
+let board = [];
+let prizeRemain = [];
+const STORAGE_KEY = 'lottery_firebase_v1';
+
+function loadStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) {
+      const data = JSON.parse(raw);
+      if(data && Array.isArray(data.board) && data.board.length === TOTAL && Array.isArray(data.prizes)) {
+        prizes = data.prizes;
+        board = data.board;
+        prizeRemain = data.prizeRemain || data.prizes.map(p => p.qty);
+        return true;
+      }
+    }
+  } catch(e) { console.error(e); }
+  return false;
+}
+
+function saveStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ prizes, board, prizeRemain })); } catch(e) { console.error(e); }
+}
+
+function init() {
+  if (!loadStorage()) {
+    prizes = JSON.parse(JSON.stringify(DEFAULT_PRIZES));
+    buildNewBoard();
+  }
+  renderPrizeList();
+  renderGrid();
+  renderStatusGrid();
+  updateHeader();
+}
+
+function buildNewBoard() {
+  prizeRemain = prizes.map(p => p.qty);
+  let tempPool = [];
+  prizes.forEach((p, idx) => {
+    let q = parseInt(p.qty) || 0;
+    for(let i=0; i<q; i++) tempPool.push(idx);
+  });
+  while(tempPool.length < TOTAL) tempPool.push(-1);
+  tempPool = tempPool.slice(0, TOTAL);
+  for (let i = tempPool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
+  }
+  board = tempPool.map(pIdx => ({ prizeIdx: pIdx, flipped: false }));
+  saveStorage();
+}
+
+function setIsBomb(name) {
+  if(!name) return false;
+  const target = name.toUpperCase();
+  return target.includes('꽝') || target.includes('-');
+}
+
+function renderGrid() {
+  const container = document.getElementById('grid');
+  if(!container) return;
+  container.innerHTML = '';
+  board.forEach((cell, i) => {
+    const div = document.createElement('div');
+    div.className = 'cell' + (cell.flipped ? ' flipped done' : '');
+    div.id = 'cell-' + i;
+    const pIdx = cell.prizeIdx;
+    const name = (pIdx >= 0 && prizes[pIdx]) ? prizes[pIdx].name : '꽝';
+    const isBomb = setIsBomb(name);
+    const emoji = EMOJI_MAP[name] || '🎁';
+    const backBgClass = isBomb ? 'bomb' : 'prize';
+    const displayFormattedName = convertToSpecialFont(name);
+
+    div.innerHTML = `
+      <div class="cell-inner">
+        <div class="face front">${i + 1}</div>
+        <div class="face back ${backBgClass}">
+          ${cell.flipped ? `
+            <div class="cell-content-box">
+              <span class="cell-emo">${emoji}</span>
+              <span class="cell-txt">${displayFormattedName}</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    if(!cell.flipped) div.addEventListener('click', () => flipCell(i));
+    container.appendChild(div);
+  });
+}
+
+function flipCell(i) {
+  if(!board[i] || board[i].flipped) return;
+  board[i].flipped = true;
+  const pIdx = board[i].prizeIdx;
+  const name = (pIdx >= 0 && prizes[pIdx]) ? prizes[pIdx].name : '꽝';
+  const isBomb = setIsBomb(name);
+  const emoji = EMOJI_MAP[name] || '🎁';
+  if(pIdx >= 0 && prizeRemain[pIdx] !== undefined) prizeRemain[pIdx] = Math.max(0, prizeRemain[pIdx] - 1);
+
+  const cellEl = document.getElementById('cell-' + i);
+  if(cellEl) {
+    cellEl.classList.add('flipped', 'done');
+    const backFace = cellEl.querySelector('.back');
+    if(backFace) {
+      backFace.className = 'face back ' + (isBomb ? 'bomb' : 'prize');
+      const displayFormattedName = convertToSpecialFont(name);
+      backFace.innerHTML = `
+        <div class="cell-content-box">
+          <span class="cell-emo">${emoji}</span>
+          <span class="cell-txt">${displayFormattedName}</span>
+        </div>
+      `;
+    }
+  }
+  updateHeader();
+  renderStatusGrid();
+  saveStorage();
+  setTimeout(() => { showPopup(i + 1, name, emoji, isBomb, pIdx); }, 450);
+}
+
+function showPopup(displayNum, name, emoji, isBomb, pIdx) {
+  const overlay = document.getElementById('resultOverlay');
+  if(!overlay) return;
+  const displayFormattedName = convertToSpecialFont(name);
+  document.getElementById('resultNum').textContent = `#${displayNum}번 칸 개봉 완료`;
+  document.getElementById('resultPrize').textContent = `${emoji} ${displayFormattedName}`;
+  document.getElementById('resultPrize').className = 'result-prize' + (isBomb ? ' bomb' : '');
+  document.getElementById('resultEmoji').textContent = isBomb ? '⚡' : '🎉';
+  const remCount = (pIdx >= 0 && prizeRemain[pIdx] !== undefined) ? prizeRemain[pIdx] : 0;
+  document.getElementById('resultRemain').textContent = `[${displayFormattedName}] 남은 전체 수량: ${remCount}개`;
+  overlay.classList.add('show');
+}
+
+function closeResult() { document.getElementById('resultOverlay').classList.remove('show'); }
+
+function updateHeader() {
+  const picked = board.filter(c => c.flipped).length;
+  document.getElementById('hs-remain').textContent = TOTAL - picked;
+  document.getElementById('hs-picked').textContent = picked;
+  const activePrizes = prizeRemain.reduce((acc, current, idx) => {
+    if(!prizes[idx]) return acc;
+    return !setIsBomb(prizes[idx].name) ? acc + current : acc;
+  }, 0);
+  document.getElementById('hs-prizes').textContent = activePrizes;
+}
+
+function renderPrizeList() {
+  const list = document.getElementById('prizeList');
+  if(!list) return;
+  list.innerHTML = '';
+  prizes.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'prize-row';
+    row.innerHTML = `
+      <input type="text" value="${p.name}" oninput="prizes[${i}].name=this.value; updateTotalCount()"/>
+      <input type="number" min="0" max="300" value="${p.qty}" oninput="prizes[${i}].qty=parseInt(this.value)||0; updateTotalCount()"/>
+      <button class="del-btn" onclick="removePrizeRow(${i})">×</button>
+    `;
+    list.appendChild(row);
+  });
+  updateTotalCount();
+}
+
+function addPrizeRow() { prizes.push({ name: '새 상품', qty: 0 }); renderPrizeList(); }
+function removePrizeRow(i) { prizes.splice(i, 1); renderPrizeList(); }
+function updateTotalCount() {
+  const total = prizes.reduce((sum, p) => sum + (parseInt(p.qty) || 0), 0);
+  const container = document.getElementById('totalCount');
+  if(!container) return;
+  container.innerHTML = `총 수량: <b>${total}</b> / 300`;
+  container.className = total > 300 ? 'total-count over' : 'total-count';
+}
+
+function applyPrizes() {
+  const total = prizes.reduce((sum, p) => sum + (parseInt(p.qty) || 0), 0);
+  if(total !== TOTAL) { alert(`총 상품 수가 300개가 되도록 설정해주세요.\n(현재 입력 수량: ${total}개)`); return; }
+  buildNewBoard(); renderGrid(); renderStatusGrid(); updateHeader(); switchTab('board');
+}
+
+function doShuffle() {
+  if(!confirm('아직 안 열어본 칸들을 다시 셔플 배치하시겠습니까?')) return;
+  const closedCells = board.map((c, idx) => ({...c, originalIdx: idx})).filter(c => !c.flipped);
+  const prizeIndexes = closedCells.map(c => c.prizeIdx);
+  for (let i = prizeIndexes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [prizeIndexes[i], prizeIndexes[j]] = [prizeIndexes[j], prizeIndexes[i]];
+  }
+  closedCells.forEach((cell, i) => { board[cell.originalIdx].prizeIdx = prizeIndexes[i]; });
+  renderGrid(); saveStorage();
+}
+
+function resetBoard() {
+  if(!confirm('모든 데이터를 리셋하고 뽑기판을 완벽히 초기화할까요?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  prizes = JSON.parse(JSON.stringify(DEFAULT_PRIZES));
+  buildNewBoard(); renderPrizeList(); renderGrid(); renderStatusGrid(); updateHeader();
+}
+
+function openByNum() {
+  const input = document.getElementById('jumpInput');
+  if(!input) return;
+  const val = parseInt(input.value);
+  if(!val || val < 1 || val > TOTAL) { alert('1부터 300번 사이의 값을 입력하십시오.'); return; }
+  const idx = val - 1;
+  const target = document.getElementById('cell-' + idx);
+  if(!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if(board[idx].flipped) { alert(`${val}번은 이미 선택된 칸입니다.`); input.value = ''; return; }
+  setTimeout(() => { flipCell(idx); }, 250);
+  input.value = '';
+}
+
+function renderStatusGrid() {
+  const grid = document.getElementById('prizeStatusGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  prizes.forEach((p, i) => {
+    const max = p.qty;
+    const current = prizeRemain[i] !== undefined ? prizeRemain[i] : max;
+    const rate = max > 0 ? (current / max) * 100 : 0;
+    const emoji = EMOJI_MAP[p.name] || '🎁';
+    const displayFormattedName = convertToSpecialFont(p.name);
+    const card = document.createElement('div');
+    card.className = 'pcard';
+    card.innerHTML = `
+      <div class="pcard-name">${emoji} ${displayFormattedName}</div>
+      <div class="pcard-bar-wrap"><div class="pcard-bar ${current === 0 ? 'empty-bar' : ''}" style="width: ${rate}%"></div></div>
+      <div class="pcard-nums"><span>남은 수량</span><b class="${current === 0 ? 'zero' : ''}">${current} / ${max}개</b></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('panel-' + tabName);
+  if(el) el.classList.add('active');
+  const map = { board: 0, setup: 1, status: 2 };
+  const btns = document.querySelectorAll('.tab-btn');
+  if(btns[map[tabName]]) btns[map[tabName]].classList.add('active');
+  if(tabName === 'status') renderStatusGrid();
+}
+
+init();
+</script>
+</body>
+</html>
